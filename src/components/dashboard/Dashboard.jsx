@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Grid } from "@mui/material";
 
 import React from "react";
 import { LineChart } from "@mui/x-charts/LineChart";
 import fan from "../../img/fan.png";
-import Switch, { SwitchProps } from "@mui/material/Switch";
+import Switch from "@mui/material/Switch";
 import WbIncandescentRoundedIcon from "@mui/icons-material/WbIncandescentRounded";
 import WbIncandescentOutlinedIcon from "@mui/icons-material/WbIncandescentOutlined";
 import Stack from "@mui/material/Stack";
@@ -13,29 +13,55 @@ const Dashboard = () => {
   const [isActive, setIsActive] = useState(false);
   const [isGlow, setIsGlow] = useState(false);
   const [isWarning, setIsWarning] = useState(false);
+  const [humidity, setHumidity] = useState();
+  const [temperature, setTemperature] = useState();
   const handleFan = () => {
-    // Đảo ngược trạng thái "active" khi ảnh được click
     setIsActive(!isActive);
   };
   const handleLightBulb = () => {
     setIsGlow(!isGlow);
   };
-
+  useEffect(() => {
+    const randomValue = Math.floor(Math.random() * 100) + 1;
+    const randomValue2 = Math.floor(Math.random() * 50) + 1;
+    setHumidity(randomValue);
+    setTemperature(randomValue2);
+  }, []);
+  const getColor = () => {
+    if (humidity < 50) {
+      return "green";
+    } else if (humidity >= 50 && humidity < 80) {
+      return "yellow";
+    } else {
+      return "red";
+    }
+  };
+  useEffect(() => {
+    if (temperature >= 30) {
+      setIsWarning(true);
+    }
+  }, [temperature]);
+  console.log("is temperature", temperature);
+  console.log("is humidity", humidity);
   return (
     <Box className={`wrapDashboard ${isWarning ? "warning" : ""}`}>
       <Grid container>
         <Grid xs={12} item display={"flex"}>
           <Grid xs={4} item sx={{ border: "1px solid black" }}>
-            <Grid xs={12}>20 C</Grid>
+            <Grid xs={12}>{temperature && temperature}</Grid>
             <Grid xs={12}>Nhiệt độ</Grid>
           </Grid>
-          <Grid xs={4} item sx={{ border: "1px solid black" }}>
-            <Grid xs={12}>20 CM</Grid>
-            <Grid xs={12}>Độ dài</Grid>
+          <Grid
+            xs={4}
+            item
+            sx={{ border: "1px solid black", backgroundColor: getColor() }}
+          >
+            <Grid xs={12}>{humidity && humidity} CM</Grid>
+            <Grid xs={12}>Độ ẩm</Grid>
           </Grid>
           <Grid xs={4} item sx={{ border: "1px solid black" }}>
             <Grid xs={12}>20 C</Grid>
-            <Grid xs={12}>Nhiệt độ</Grid>
+            <Grid xs={12}>Km/h</Grid>
           </Grid>
         </Grid>
         <Grid xs={12} item display={"flex"}>
