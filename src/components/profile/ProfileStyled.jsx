@@ -30,3 +30,26 @@ export const ExperienceSkillGrid = styled(Grid)({
   borderRadius: "20px",
   padding: "20px",
 });
+export const WrapSkillGrid = styled(Grid)({
+  padding: "20px",
+  border: "1px black solid",
+  borderRadius: "20px",
+  marginTop: "20px",
+});
+export const WrapProjectImg = styled(Box)({
+  maxWidth: "350px",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  overflow: "hidden",
+});
+export const TitleProjectTypography = styled(Typography)({
+  marginTop: "12px",
+  fontWeight: "600",
+});
+export const ProjectItemGrid = styled(Grid)({
+  padding: "20px",
+  border: "1px solid black",
+  borderRadius: "20px",
+  boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",
+});

@@ -17,7 +17,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import logoPtit from "./img/logoPtit.png";
 import { Grid } from "@mui/material";
 function App() {
-  const pages = ["dashboard", "data-sensor", "1"];
+  const pages = ["dashboard", "data-sensor", "action-history", "profile"];
   const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -137,7 +137,7 @@ function App() {
               ))}
             </Box>
 
-            <Box sx={{ flexGrow: 0 }}>
+            {/* <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
@@ -165,7 +165,7 @@ function App() {
                   </MenuItem>
                 ))}
               </Menu>
-            </Box>
+            </Box> */}
           </Toolbar>
         </Container>
       </AppBar>

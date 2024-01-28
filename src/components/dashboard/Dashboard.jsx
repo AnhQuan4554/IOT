@@ -25,17 +25,28 @@ const Dashboard = () => {
   };
   useEffect(() => {
     const randomValue = Math.floor(Math.random() * 100) + 1;
-    const randomValue2 = Math.floor(Math.random() * 50) + 1;
+    const randomValue2 = Math.floor(Math.random() * (50 - -10 + 1)) + -10;
+
     setHumidity(randomValue);
     setTemperature(randomValue2);
   }, []);
-  const getColor = () => {
-    if (humidity < 50) {
-      return "#238fdc";
-    } else if (humidity >= 50 && humidity < 80) {
-      return "#0969ad";
+  const getHumidityColor = () => {
+    const hue = (humidity / 100) * 120;
+
+    return `hsl(${hue}, 100%, 50%)`;
+  };
+  const getTemperatureColor = () => {
+    const normalizedTemperature = Math.min(Math.max(temperature, -10), 40);
+    if (temperature <= 12) {
+      return "#244782";
+    } else if (temperature > 12 && temperature <= 20) {
+      return "#00d4ff";
+    } else if (temperature > 20 && temperature <= 25) {
+      return "##6a6d73";
+    } else if (temperature > 25 && temperature < 30) {
+      return "#ff9500";
     } else {
-      return "blue";
+      return "#ff3700";
     }
   };
   useEffect(() => {
@@ -53,6 +64,7 @@ const Dashboard = () => {
             className={`temperature ${isWarning ? "warning" : ""}`}
             xs={4}
             item
+            sx={{ background: getTemperatureColor() }}
           >
             <Grid sx={{ textAlign: "center" }} xs={12}>
               {temperature && temperature}
@@ -61,7 +73,11 @@ const Dashboard = () => {
               Nhiệt độ
             </Grid>
           </WeatherInforGrid>
-          <WeatherInforGrid xs={4} item sx={{ backgroundColor: getColor() }}>
+          <WeatherInforGrid
+            xs={4}
+            item
+            sx={{ backgroundColor: getHumidityColor() }}
+          >
             <Grid sx={{ textAlign: "center" }} xs={12}>
               {humidity && humidity} %
             </Grid>

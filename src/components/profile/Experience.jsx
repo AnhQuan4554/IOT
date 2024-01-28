@@ -1,6 +1,7 @@
 import React from "react";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import { Box, Grid, Typography } from "@mui/material";
+import { WrapSkillGrid } from "./ProfileStyled";
 const Experience = () => {
   const languagesAndTools = [
     "HTML",
@@ -22,59 +23,59 @@ const Experience = () => {
       <Typography align="center" variant="h2" fontWeight={600}>
         Experience
       </Typography>
-      <Grid container>
-        <Grid item xs={6}>
+      <Grid container justifyContent={"space-between"}>
+        <WrapSkillGrid item xs={5.5}>
           <Grid container rowSpacing={4}>
             <Grid item xs={12}>
-              <Typography variant="h5" fontWeight={600}>
-                Programming Languages and Tools
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
               <Grid container>
-                {languagesAndTools.map((item) => (
-                  <Grid item xs={6}>
-                    <Grid container>
-                      <Grid item xs={2}>
-                        <VerifiedOutlinedIcon />
-                      </Grid>
-                      <Grid item xs={6}>
+                <Grid item xs={12}>
+                  <Typography
+                    variant="h5"
+                    fontWeight={600}
+                    sx={{ marginBottom: "20px" }}
+                  >
+                    Frontend Development
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Grid container spacing={2}>
+                    {languagesAndTools.map((item) => (
+                      <Grid item xs={6} display={"flex"}>
+                        <VerifiedOutlinedIcon sx={{ marginRight: "10px" }} />
                         {item}
                       </Grid>
-                    </Grid>
+                    ))}
                   </Grid>
-                ))}
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
-        </Grid>
+        </WrapSkillGrid>
 
-        <Grid item xs={6}>
+        <WrapSkillGrid item xs={5.5}>
           <Grid container rowSpacing={4}>
             <Grid item xs={12}>
-              <Typography variant="h5" fontWeight={600}>
-                Databases
-              </Typography>
-            </Grid>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Typography
+                    variant="h5"
+                    fontWeight={600}
+                    sx={{ marginBottom: "20px" }}
+                  >
+                    Databases
+                  </Typography>
+                </Grid>
 
-            <Grid item xs={12}>
-              <Grid container>
                 {Databases.map((item) => (
-                  <Grid item xs={6}>
-                    <Grid container>
-                      <Grid item xs={2}>
-                        <VerifiedOutlinedIcon />
-                      </Grid>
-                      <Grid item xs={10}>
-                        {item}
-                      </Grid>
-                    </Grid>
+                  <Grid item xs={6} display={"flex"}>
+                    <VerifiedOutlinedIcon sx={{ marginRight: "10px" }} />
+                    {item}
                   </Grid>
                 ))}
               </Grid>
             </Grid>
           </Grid>
-        </Grid>
+        </WrapSkillGrid>
       </Grid>
     </Box>
   );

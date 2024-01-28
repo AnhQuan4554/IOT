@@ -12,6 +12,7 @@ import IconButton from "@mui/material/IconButton";
 import FacebookRoundedIcon from "@mui/icons-material/FacebookRounded";
 import AboutMe from "./AboutMe";
 import Experience from "./Experience";
+import Project from "./Project";
 const Profile = () => {
   return (
     <WrapProfileStyled>
@@ -44,7 +45,7 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <Typography align="center" variant="h2" fontWeight={"500"}>
-              Frontend Developer
+              Frontend Full Stack Developer
             </Typography>
           </Grid>
           <Grid item xs={12} display={"flex"}>
@@ -69,6 +70,7 @@ const Profile = () => {
       </Grid>
       <AboutMe />
       <Experience />
+      <Project />
     </WrapProfileStyled>
   );
 };
