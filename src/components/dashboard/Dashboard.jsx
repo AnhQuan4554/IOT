@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Grid } from "@mui/material";
+import "../../App.css";
 
 import React from "react";
 import { LineChart } from "@mui/x-charts/LineChart";
@@ -9,6 +10,7 @@ import WbIncandescentRoundedIcon from "@mui/icons-material/WbIncandescentRounded
 import WbIncandescentOutlinedIcon from "@mui/icons-material/WbIncandescentOutlined";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { WeatherInforGrid, WrapDashboard } from "./DasboardStyled";
 const Dashboard = () => {
   const [isActive, setIsActive] = useState(false);
   const [isGlow, setIsGlow] = useState(false);
@@ -29,11 +31,11 @@ const Dashboard = () => {
   }, []);
   const getColor = () => {
     if (humidity < 50) {
-      return "green";
+      return "#238fdc";
     } else if (humidity >= 50 && humidity < 80) {
-      return "yellow";
+      return "#0969ad";
     } else {
-      return "red";
+      return "blue";
     }
   };
   useEffect(() => {
@@ -44,25 +46,37 @@ const Dashboard = () => {
   console.log("is temperature", temperature);
   console.log("is humidity", humidity);
   return (
-    <Box className={`wrapDashboard ${isWarning ? "warning" : ""}`}>
+    <WrapDashboard className="wrapDashboard">
       <Grid container>
         <Grid xs={12} item display={"flex"}>
-          <Grid xs={4} item sx={{ border: "1px solid black" }}>
-            <Grid xs={12}>{temperature && temperature}</Grid>
-            <Grid xs={12}>Nhiệt độ</Grid>
-          </Grid>
-          <Grid
+          <WeatherInforGrid
+            className={`temperature ${isWarning ? "warning" : ""}`}
             xs={4}
             item
-            sx={{ border: "1px solid black", backgroundColor: getColor() }}
           >
-            <Grid xs={12}>{humidity && humidity} CM</Grid>
-            <Grid xs={12}>Độ ẩm</Grid>
-          </Grid>
-          <Grid xs={4} item sx={{ border: "1px solid black" }}>
-            <Grid xs={12}>20 C</Grid>
-            <Grid xs={12}>Km/h</Grid>
-          </Grid>
+            <Grid sx={{ textAlign: "center" }} xs={12}>
+              {temperature && temperature}
+            </Grid>
+            <Grid sx={{ textAlign: "center" }} xs={12}>
+              Nhiệt độ
+            </Grid>
+          </WeatherInforGrid>
+          <WeatherInforGrid xs={4} item sx={{ backgroundColor: getColor() }}>
+            <Grid sx={{ textAlign: "center" }} xs={12}>
+              {humidity && humidity} %
+            </Grid>
+            <Grid sx={{ textAlign: "center" }} xs={12}>
+              Độ ẩm
+            </Grid>
+          </WeatherInforGrid>
+          <WeatherInforGrid xs={4} item>
+            <Grid sx={{ textAlign: "center" }} xs={12}>
+              20
+            </Grid>
+            <Grid sx={{ textAlign: "center" }} xs={12}>
+              Km/h
+            </Grid>
+          </WeatherInforGrid>
         </Grid>
         <Grid xs={12} item display={"flex"}>
           <Grid sx={{ border: "1px solid black" }} xs={8} item>
@@ -138,7 +152,7 @@ const Dashboard = () => {
           </Grid>
         </Grid>
       </Grid>
-    </Box>
+    </WrapDashboard>
   );
 };
 

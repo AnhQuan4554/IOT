@@ -3,7 +3,6 @@
 }
 
 .App-logo {
-  height: 40vmin;
   pointer-events: none;
 }
 
@@ -15,7 +14,7 @@
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -44,7 +43,9 @@
 .fan-image.active {
   animation: rotateAnimation 0.5s linear infinite;
 }
-
+.temperature.warning {
+  animation: blink 1.5s linear infinite;
+}
 @keyframes rotateAnimation {
   to {
     transform: rotate(360deg);
@@ -60,8 +61,4 @@
   75% {
     background-color: red; /* Màu đỏ */
   }
-}
-
-.wrapDashboard.warning {
-  animation: blink 2s infinite; /* Thực hiện animation mỗi 2 giây vô hạn lần */
 }
