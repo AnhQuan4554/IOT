@@ -45,7 +45,7 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <Typography align="center" variant="h2" fontWeight={"500"}>
-              Frontend Full Stack Developer
+              Full Stack Developer
             </Typography>
           </Grid>
           <Grid item xs={12} display={"flex"}>

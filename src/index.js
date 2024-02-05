@@ -8,6 +8,7 @@ import Dashboard from "./components/dashboard/Dashboard";
 import DataSensor from "./components/data-sensor/DataSensor";
 import Profile from "./components/profile/Profile";
 import ActionHistory from "./components/action-history/ActionHistory";
+import ChartAuto from "./components/ChartAuto";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -19,6 +20,7 @@ root.render(
           <Route path="data-sensor" element={<DataSensor />} />
           <Route path="action-history" element={<ActionHistory />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="chart" element={<ChartAuto />} />
         </Route>
       </Routes>
     </BrowserRouter>

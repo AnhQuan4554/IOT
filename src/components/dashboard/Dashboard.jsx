@@ -17,6 +17,14 @@ const Dashboard = () => {
   const [isWarning, setIsWarning] = useState(false);
   const [humidity, setHumidity] = useState();
   const [temperature, setTemperature] = useState();
+  const random = Math.floor(Math.random() * 100) + 1;
+  // const random2 = Math.floor(Math.random() * (50 - -10 + 1)) + -10;
+  const [chartData, setChartData] = useState({
+    temperatureData: [10, 20, 30, 15, 23],
+    humidityData: [30, 20, 10, 25, 40],
+    pressureData: [12, 30, 20, 56, 20],
+  });
+  setInterval(() => {}, 1000);
   const handleFan = () => {
     setIsActive(!isActive);
   };
@@ -30,24 +38,30 @@ const Dashboard = () => {
     setHumidity(randomValue);
     setTemperature(randomValue2);
   }, []);
+
   const getHumidityColor = () => {
     const hue = (humidity / 100) * 120;
 
     return `hsl(${hue}, 100%, 50%)`;
   };
+
   const getTemperatureColor = () => {
     const normalizedTemperature = Math.min(Math.max(temperature, -10), 40);
+    let gradientColor;
+
     if (temperature <= 12) {
-      return "#244782";
+      gradientColor = `linear-gradient(90deg, #244782, #00d4ff)`;
     } else if (temperature > 12 && temperature <= 20) {
-      return "#00d4ff";
+      gradientColor = `linear-gradient(90deg, #00d4ff, #6a6d73)`;
     } else if (temperature > 20 && temperature <= 25) {
-      return "##6a6d73";
+      gradientColor = `linear-gradient(90deg, #6a6d73, #ff9500)`;
     } else if (temperature > 25 && temperature < 30) {
-      return "#ff9500";
+      gradientColor = `linear-gradient(90deg, #ff9500, #ff3700)`;
     } else {
-      return "#ff3700";
+      gradientColor = `linear-gradient(90deg, #ff3700, #ff0000)`;
     }
+
+    return gradientColor;
   };
   useEffect(() => {
     if (temperature >= 30) {
@@ -97,20 +111,29 @@ const Dashboard = () => {
         <Grid xs={12} item display={"flex"}>
           <Grid sx={{ border: "1px solid black" }} xs={8} item>
             <LineChart
-              xAxis={[{ data: [1, 2, 3, 5, 8, 10, 12] }]}
+              xAxis={[{ data: [1, 2, 3, 5, 8] }]}
+              yAxis={[
+                { id: "linearAxis", scaleType: "linear" },
+                { id: "logAxis", scaleType: "log" },
+              ]}
               series={[
                 {
-                  data: [2, 4.5, 2, 8.5, 1.5, 5],
+                  data: chartData.temperatureData,
+                  label: "Temperature",
                 },
                 {
-                  data: [3, 4.5, 5, 6.5, 6.5, 7],
+                  data: chartData.humidityData,
+                  label: "Humidity",
                 },
                 {
-                  data: [5, 7.5, 8, 1.5, 6.5, 7],
+                  data: chartData.pressureData,
+                  label: "Pressure",
                 },
               ]}
               height={300}
               sx={{ width: "100%" }}
+              leftAxis="linearAxis"
+              rightAxis="linearAxis"
             />
           </Grid>
           <Grid sx={{ border: "1px solid black" }} xs={4} item>

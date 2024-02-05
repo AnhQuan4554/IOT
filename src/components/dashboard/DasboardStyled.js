@@ -10,4 +10,6 @@ export const WrapDashboard = styled(Box)(() => ({
 }));
 export const WeatherInforGrid = styled(Grid)(() => ({
   border: "1px solid black",
+  padding: "20px",
+  borderRadius: "10px",
 }));
