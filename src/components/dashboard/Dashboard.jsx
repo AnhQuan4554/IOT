@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Button } from "@mui/material";
 import "../../App.css";
 
 import React from "react";
@@ -155,12 +155,13 @@ const Dashboard = () => {
                 spacing={1}
                 alignItems="center"
               >
-                <Typography>Off</Typography>
-                <Switch
+                <Button
+                  sx={{ background: !isActive && "#ef5350" }}
                   onClick={handleFan}
-                  inputProps={{ "aria-label": "ant design" }}
-                />
-                <Typography>On</Typography>
+                  variant="contained"
+                >
+                  {isActive ? "Off" : "On"}
+                </Button>
               </Stack>
             </Grid>
             <Grid xs={12} item>
@@ -180,12 +181,13 @@ const Dashboard = () => {
                 spacing={1}
                 alignItems="center"
               >
-                <Typography>Off</Typography>
-                <Switch
+                <Button
+                  sx={{ background: !isGlow && "#ef5350" }}
                   onClick={handleLightBulb}
-                  inputProps={{ "aria-label": "ant design" }}
-                />
-                <Typography>On</Typography>
+                  variant="contained"
+                >
+                  {isGlow ? "Off" : "On"}
+                </Button>
               </Stack>
             </Grid>
           </Grid>

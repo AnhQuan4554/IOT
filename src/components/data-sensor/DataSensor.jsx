@@ -6,19 +6,22 @@ import {
   TextField,
   Button,
   Grid,
+  TablePagination,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
-
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
 import axios from "axios";
 
 const DataSensor = () => {
   const [rows, setRows] = useState();
   const [searchTerm, setSearchTerm] = useState("");
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [page, setPage] = React.useState(0);
+  const [selectShowData, setSelectShowData] = useState("All");
   const fetchData = async () => {
     const data = await axios.get(`http://localhost:3001/data-sensor`);
     setRows(data.data);
@@ -28,11 +31,16 @@ const DataSensor = () => {
 
     setRows([data.data]);
   };
-  console.log("rowssss", rows);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const handleChangePage = (event, newPage) => {
+    console.log(newPage);
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
   const getTemperatureColor = (temperature) => {
     const normalizedTemperature = Math.min(Math.max(temperature, -10), 40);
     if (temperature <= 12) {
@@ -55,8 +63,30 @@ const DataSensor = () => {
   const handleSearch = async () => {
     console.log("searchTermsearchTerm", searchTerm);
     const data = await getById(searchTerm);
-    console.log("da taa byID", data);
   };
+  // start handle table show data
+  function stableSort(array) {
+    const stabilizedThis = array.map((el, index) => [el, index]);
+
+    return stabilizedThis.map((el) => el[0]);
+  }
+
+  const visibleRows = React.useMemo(
+    () =>
+      rows
+        ? stableSort(rows).slice(
+            page * rowsPerPage,
+            page * rowsPerPage + rowsPerPage
+          )
+        : [],
+    [page, rowsPerPage, rows]
+  );
+
+  console.log("visibleRows++ ", visibleRows, page, rowsPerPage);
+  // end handle table show data
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <Box>
@@ -81,8 +111,8 @@ const DataSensor = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows &&
-              rows.map((row) => (
+            {visibleRows &&
+              visibleRows.map((row) => (
                 <TableRow
                   key={row.id}
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
@@ -109,6 +139,15 @@ const DataSensor = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={rows && rows.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </Box>
   );
 };
