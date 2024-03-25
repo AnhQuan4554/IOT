@@ -3,7 +3,8 @@ import { LineChart } from "@mui/x-charts/LineChart";
 const ChartAuto = () => {
   const [dataX, setDataX] = useState([1, 2, 3, 4, 5, 6, 7]);
   const [dataY, setDataY] = useState([1, 10, 30, 55, 70, 90, 50]);
-  const sampleY = [150];
+  const [dataC, setDataC] = useState([15, 20, 10, 75, 40, 70, 90]);
+  const sampleY = [150]; // luôn fix cứng để tạo chiều cao cho bảng
   useEffect(() => {
     const intervalId = setInterval(() => {
       // Sao chép dữ liệu hiện tại sang mảng mới
@@ -40,8 +41,9 @@ const ChartAuto = () => {
           { id: "logAxis", scaleType: "log" },
         ]}
         series={[
-          { yAxisKey: "linearAxis", data: sampleY, label: "point" },
-          { yAxisKey: "linearAxis", data: dataY, label: "linear" },
+          { yAxisKey: "linearAxis", data: sampleY, label: "Moc" },
+          { yAxisKey: "linearAxis", data: dataY, label: "Humidity" },
+          { yAxisKey: "linearAxis", data: dataC, label: "dataC" },
         ]}
         leftAxis="linearAxis"
         rightAxis="linearAxis"
