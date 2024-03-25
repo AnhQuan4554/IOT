@@ -1,0 +1,64 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fan-image {
+  transition: transform 0.5s;
+}
+
+.fan-image.active {
+  animation: rotateAnimation 0.5s linear infinite;
+}
+.temperature.warning {
+  animation: blink 1.5s linear infinite;
+}
+@keyframes rotateAnimation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes blink {
+  0%,
+  50%,
+  100% {
+    background-color: transparent; /* Màu nền trong suốt */
+  }
+  25%,
+  75% {
+    background-color: red; /* Màu đỏ */
+  }
+}
