@@ -36,17 +36,27 @@ export class ActionHistoryController {
     enum: ['LatestFirst', 'OldestFirst'],
     required: false,
   })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: false,
+    description: 'Limit the number of results returned',
+  })
   @ApiResponse({
     status: 200,
     description: 'Retrieve all action history',
     type: [ActionHistory],
   })
-  async findAll(@Query('sort') sort: any) {
-    console.log(sort);
+  async findAll(@Query('sort') sort: any, @Query('limit') limit: any) {
     if (sort == 'LatestFirst' || sort == 'OldestFirst') {
-      return await this.actionHistoryService.findAllOrderedByCreatedAt(sort);
+      console.log('limit', limit);
+      return await this.actionHistoryService.findAllOrderedByCreatedAt(
+        sort,
+        limit,
+      );
     }
-    return await this.actionHistoryService.findAll();
+
+    return await this.actionHistoryService.findAll(limit);
   }
 
   @Get(':id')

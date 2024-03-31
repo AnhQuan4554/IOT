@@ -22,22 +22,24 @@ export class ActionHistoryService {
     return res;
   }
 
-  async findAll() {
+  async findAll(limit) {
     console.log(this.actionHistory.find());
-    return await this.actionHistory.find();
+    return await this.actionHistory.find({ take: limit });
   }
-  async findAllOrderedByCreatedAt(sort) {
+  async findAllOrderedByCreatedAt(sort, limit) {
     if (sort == 'LatestFirst') {
       return this.actionHistory.find({
         order: {
           create_at: 'DESC',
         },
+        take: limit,
       });
     } else {
       return this.actionHistory.find({
         order: {
           create_at: 'ASC',
         },
+        take: limit,
       });
     }
   }
