@@ -17,50 +17,26 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { DataSensor } from './entities/data-sensor.entity';
+import { GetDataSensorDto } from './dtos/get-datasensor.dto';
+import { SearchDataSensorDto } from './dtos/search-datasensor.dto';
 
 @Controller('data-sensor')
 @ApiTags('Data Sensor')
 export class DataSensorController {
   constructor(private readonly dataSenSorService: DataSensorService) {}
-
+  // Get ALL
   @Get()
-  @ApiQuery({ name: 'sortFor', required: false, description: 'Sort data for' })
-  @ApiQuery({ name: 'sort', required: false, description: 'Sort order' })
-  @ApiResponse({
-    status: 200,
-    description: 'Retrieve all data sensors',
-    type: [DataSensor],
-  })
-  async findAll(@Query('sortFor') sortFor: any, @Query('sort') sort: any) {
-    if (sortFor && sort) {
-      const data = await this.dataSenSorService.findAllWithConditions(
-        sortFor,
-        sort,
-      );
-      return data;
-    }
-    const data = await this.dataSenSorService.findAll();
-    return data;
+  async getAllDataSensor(@Query() getDataSensorDto: GetDataSensorDto) {
+    return await this.dataSenSorService.getAllDataSensor(getDataSensorDto);
   }
-
-  @Get(':id')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    description: 'ID of the data sensor',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Retrieve data sensor by ID',
-    type: DataSensor,
-  })
-  async findOne(@Param('id') id: any) {
-    return this.dataSenSorService.findOne(id);
+  // Search by condition
+  @Get('/search')
+  async searchDataSenSor(@Query() searchDataSensorDto: SearchDataSensorDto) {
+    return await this.dataSenSorService.seachDataSensor(searchDataSensorDto);
   }
 
   @Post()

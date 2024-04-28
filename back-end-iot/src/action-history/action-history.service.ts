@@ -4,6 +4,9 @@ import { UpdateActionHistoryDto } from './dto/update-action-history.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ActionHistory } from './entities/action-history.entity';
 import { Repository } from 'typeorm';
+import { GetActionHistoryDto } from './dto/get-action-history.dto';
+
+import { SearchActionHistoryDto } from './dto/search-action-history.dto';
 
 @Injectable()
 export class ActionHistoryService {
@@ -12,40 +15,61 @@ export class ActionHistoryService {
     private actionHistory: Repository<ActionHistory>,
   ) {}
   async create(createActionHistoryDto: CreateActionHistoryDto) {
-    // createActionHistoryDto.deviceName
     const newDataActionHistory = await this.actionHistory.create(
       createActionHistoryDto,
     );
 
     const res = await this.actionHistory.save(newDataActionHistory);
-    console.log(res);
     return res;
   }
+  //,sortForAction,sortForColumnName
 
-  async findAll(limit) {
-    console.log(this.actionHistory.find());
-    return await this.actionHistory.find({ take: limit });
+  // sort = DESC / ASC
+  //sortForAction = 1, 0
+  //sortForColumnName = id , deviceName, action, create_at
+  async getAllActionHistory(getActionHistoryDto: GetActionHistoryDto) {
+    const {
+      sort = 'ASC',
+      rowsPerPage = 5,
+      page = 1,
+      sortForColumnName = 'id',
+    } = getActionHistoryDto;
+
+    const offset = (((+page as number) - 1) * +rowsPerPage) as number;
+    const order = {
+      [sortForColumnName]: sort,
+    };
+    return this.actionHistory.find({
+      order,
+      take: +rowsPerPage,
+      skip: offset,
+    });
   }
-  async findAllOrderedByCreatedAt(sort, limit) {
-    if (sort == 'LatestFirst') {
-      return this.actionHistory.find({
-        order: {
-          create_at: 'DESC',
-        },
-        take: limit,
-      });
-    } else {
-      return this.actionHistory.find({
-        order: {
-          create_at: 'ASC',
-        },
-        take: limit,
-      });
+
+  async seachActionHistory(searchActionHistoryDto: SearchActionHistoryDto) {
+    const {
+      sort = 'ASC',
+      rowsPerPage = 5,
+      page = 1,
+      sortForColumnName = 'id',
+      value,
+    } = searchActionHistoryDto;
+    if (value == null || value == '') {
+      return 'Value is not empty';
     }
-  }
-
-  async findOne(id: number) {
-    return await this.findOne(id);
+    const searchCondition = {
+      [sortForColumnName]: value,
+    };
+    const offset = (((+page as number) - 1) * +rowsPerPage) as number;
+    const order = {
+      [sortForColumnName]: sort,
+    };
+    return this.actionHistory.find({
+      order,
+      take: +rowsPerPage,
+      skip: +offset,
+      where: searchCondition,
+    });
   }
 
   async update(id: number, updateActionHistoryDto: UpdateActionHistoryDto) {

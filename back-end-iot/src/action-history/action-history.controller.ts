@@ -19,11 +19,12 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger/dist';
 import { ActionHistory } from './entities/action-history.entity';
+import { GetActionHistoryDto } from './dto/get-action-history.dto';
+import { SearchActionHistoryDto } from './dto/search-action-history.dto';
 
 @Controller('action-history')
 @ApiTags('Action History')
@@ -31,46 +32,19 @@ export class ActionHistoryController {
   constructor(private readonly actionHistoryService: ActionHistoryService) {}
 
   @Get()
-  @ApiQuery({
-    name: 'sort',
-    enum: ['LatestFirst', 'OldestFirst'],
-    required: false,
-  })
-  @ApiQuery({
-    name: 'limit',
-    type: Number,
-    required: false,
-    description: 'Limit the number of results returned',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Retrieve all action history',
-    type: [ActionHistory],
-  })
-  async findAll(@Query('sort') sort: any, @Query('limit') limit: any) {
-    if (sort == 'LatestFirst' || sort == 'OldestFirst') {
-      console.log('limit', limit);
-      return await this.actionHistoryService.findAllOrderedByCreatedAt(
-        sort,
-        limit,
-      );
-    }
-
-    return await this.actionHistoryService.findAll(limit);
+  async getAllActionHistory(@Query() getActionHistoryDto: GetActionHistoryDto) {
+    return await this.actionHistoryService.getAllActionHistory(
+      getActionHistoryDto,
+    );
   }
 
-  @Get(':id')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    description: 'ID of the action history',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Retrieve the action history by ID',
-  })
-  findOne(@Param('id') id: string) {
-    return this.actionHistoryService.findOne(+id);
+  @Get('/search')
+  async seachActionHistory(
+    @Query() searchActionHistoryDto: SearchActionHistoryDto,
+  ) {
+    return await this.actionHistoryService.seachActionHistory(
+      searchActionHistoryDto,
+    );
   }
 
   @Post()

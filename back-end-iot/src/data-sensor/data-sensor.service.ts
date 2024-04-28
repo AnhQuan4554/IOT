@@ -11,6 +11,8 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { GetDataSensorDto } from './dtos/get-datasensor.dto';
+import { SearchDataSensorDto } from './dtos/search-datasensor.dto';
 @Injectable()
 @WebSocketGateway()
 export class DataSensorService {
@@ -19,73 +21,49 @@ export class DataSensorService {
     @InjectRepository(DataSensor)
     private dataSensor: Repository<DataSensor>,
   ) {}
-  async findAll() {
-    return await this.dataSensor.find();
+  async getAllDataSensor(getDataSensorDto: GetDataSensorDto) {
+    const {
+      sort = 'ASC',
+      rowsPerPage = 5,
+      page = 1,
+      sortForColumnName = 'id',
+    } = getDataSensorDto;
+    const offset = (((+page as number) - 1) * +rowsPerPage) as number;
+    const order = {
+      [sortForColumnName]: sort,
+    };
+    return this.dataSensor.find({
+      order,
+      take: +rowsPerPage,
+      skip: offset,
+    });
   }
-  async findAllWithConditions(sortFor, sort) {
-    if (sortFor == 'temperature') {
-      if (sort === 'dow') {
-        return this.dataSensor.find({
-          order: {
-            temperature: 'DESC',
-          },
-        });
-      } else {
-        return this.dataSensor.find({
-          order: {
-            temperature: 'ASC',
-          },
-        });
-      }
-    } else if (sortFor == 'humb') {
-      if (sort === 'dow') {
-        return this.dataSensor.find({
-          order: {
-            humb: 'DESC',
-          },
-        });
-      } else {
-        return this.dataSensor.find({
-          order: {
-            humb: 'ASC',
-          },
-        });
-      }
-    } else if (sortFor == 'light') {
-      if (sort === 'dow') {
-        return this.dataSensor.find({
-          order: {
-            light: 'DESC',
-          },
-        });
-      } else {
-        return this.dataSensor.find({
-          order: {
-            light: 'ASC',
-          },
-        });
-      }
-    } else if (sortFor == 'creat_at') {
-      if (sort === 'dow') {
-        return this.dataSensor.find({
-          order: {
-            create_at: 'DESC',
-          },
-        });
-      } else {
-        return this.dataSensor.find({
-          order: {
-            create_at: 'ASC',
-          },
-        });
-      }
+
+  async seachDataSensor(searchDataSensorDto: SearchDataSensorDto) {
+    const {
+      sort = 'ASC',
+      rowsPerPage = 5,
+      page = 1,
+      sortForColumnName = 'id',
+      value,
+    } = searchDataSensorDto;
+    if (value == null || value == '') {
+      return 'Value is not empty';
     }
+    const searchCondition = {
+      [sortForColumnName]: value,
+    };
+    const offset = (((+page as number) - 1) * +rowsPerPage) as number;
+    const order = {
+      [sortForColumnName]: sort,
+    };
+    return this.dataSensor.find({
+      order,
+      take: +rowsPerPage,
+      skip: +offset,
+      where: searchCondition,
+    });
   }
-
-  async findOne(id: number) {
-    return await this.dataSensor.findOneBy({ id });
-  }
-
   async create(newData: DataSensorDto) {
     const newDataSensor = await this.dataSensor.create(newData);
     const savedData = await this.dataSensor.save(newDataSensor);
