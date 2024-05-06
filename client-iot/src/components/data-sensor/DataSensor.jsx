@@ -27,38 +27,30 @@ const DataSensor = () => {
   const [rows, setRows] = useState();
   const [searchTerm, setSearchTerm] = useState("");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [page, setPage] = React.useState(0);
-  const [optionData, setOptionData] = useState("All");
-  const [sortOrder, setSortOrder] = useState("up");
-  const [sortFor, setSortFor] = useState("temperature");
+  const [page, setPage] = React.useState(1);
+  const [sort, setSort] = useState("ASC");
+  const [sortForColumnName, setSortForColumnName] = useState("id");
   const [isLoading, setIsLoading] = useState(true);
+  const [optionData, setOptionData] = useState("all");
+  const [totalElement, setTotalElement] = useState(null);
   const fetchData = async () => {
     setIsLoading(true);
-    const data = await axios.get(
-      `http://localhost:3001/data-sensor?sortFor=${sortFor}&&sort=${sortOrder}`
+    const { data } = await axios.get(
+      `http://localhost:3001/data-sensor?rowsPerPage=${rowsPerPage}&page=${page}&sort=${sort}&sortForColumnName=${sortForColumnName}`
     );
     if (data) {
       setIsLoading(false);
     }
     await setRows(data.data);
-  };
-  const getById = async (id) => {
-    if (id) {
-      const data = await axios.get(`http://localhost:3001/data-sensor/${id}`);
-      setRows([data.data]);
-    } else {
-      const data = await axios.get(`http://localhost:3001/data-sensor`);
-      setRows(data.data);
-    }
+    await setTotalElement(data.totalItems);
   };
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    setPage(newPage + 1);
   };
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
   };
   const getTemperatureColor = (temperature) => {
     const normalizedTemperature = Math.min(Math.max(temperature, -10), 40);
@@ -82,42 +74,25 @@ const DataSensor = () => {
     return `hsl(${hue}, 100%, 50%)`;
   };
   const handleSearch = async () => {
-    await getById(searchTerm);
-  };
-  // start handle table show data
-  function stableSort(array) {
-    const stabilizedThis = array.map((el, index) => [el, index]);
-
-    return stabilizedThis.map((el) => el[0]);
-  }
-
-  const visibleRows = React.useMemo(
-    () =>
-      rows
-        ? stableSort(rows).slice(
-            page * rowsPerPage,
-            page * rowsPerPage + rowsPerPage
-          )
-        : [],
-    [page, rowsPerPage, rows]
-  );
-  // end handle table show data
-  // change sort
-  const handleChangeSortData = (sortflow) => {
-    setSortFor(sortflow);
-    if (sortOrder === "dow") {
-      setSortOrder("up");
-    } else {
-      setSortOrder("dow");
+    setIsLoading(true);
+    const { data } = await axios.get(
+      `http://localhost:3001/data-sensor/search?rowsPerPage=${rowsPerPage}&page=${page}&sort=${sort}&searchForColumnName=${
+        optionData !== "all" ? optionData : "id"
+      }&value=${searchTerm}`
+    );
+    if (data) {
+      setIsLoading(false);
     }
+    await setRows(data);
   };
 
   //get all data
   useEffect(() => {
     fetchData();
-  }, [sortFor, sortOrder]);
+  }, [sort, sortForColumnName, page, rowsPerPage]);
   const handleChangeOptionData = (event) => {
-    setOptionData(event.target.value);
+    const { value } = event.target;
+    setOptionData(value);
   };
   function formatDate(inputDateString) {
     const originalDate = new Date(inputDateString);
@@ -130,6 +105,17 @@ const DataSensor = () => {
 
     return formattedDate;
   }
+  // change sort
+  const handleChangeSortData = (sortflow) => {
+    setSortForColumnName(sortflow);
+    if (sort === "ASC") {
+      setSort("DESC");
+    } else {
+      setSort("ASC");
+    }
+  };
+  const idOptions = ["id", "temperature", "humb", "light", "creat_at"];
+  const createOptions = ["creat_at", "temperature", "humb", "light", "id"];
 
   return (
     <Box sx={{ position: "relative" }}>
@@ -149,31 +135,22 @@ const DataSensor = () => {
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              value={optionData}
+              value={
+                Array.isArray(optionData)
+                  ? optionData[0] !== "id"
+                    ? createOptions
+                    : idOptions
+                  : optionData
+              }
               label="Option"
               onChange={handleChangeOptionData}
             >
-              <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Temperature">Temperature</MenuItem>
-              <MenuItem value="Humb">Humb</MenuItem>
-              <MenuItem value="Light">Light</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={4}>
-          <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">Option</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={optionData}
-              label="Option"
-              onChange={handleChangeOptionData}
-            >
-              <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Temperature">Temperature</MenuItem>
-              <MenuItem value="Humb">Humb</MenuItem>
-              <MenuItem value="Light">Light</MenuItem>
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value={idOptions}>id</MenuItem>
+              <MenuItem value="temperature">Temperature</MenuItem>
+              <MenuItem value="humb">Humb</MenuItem>
+              <MenuItem value="light">Light</MenuItem>
+              <MenuItem value={createOptions}>Create at</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -183,8 +160,28 @@ const DataSensor = () => {
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell align="center">id</TableCell>
-              {optionData === "All" || optionData === "Temperature" ? (
+              <TableCell
+                onClick={() => handleChangeSortData("id")}
+                align="center"
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography>Id</Typography>{" "}
+                  {sort == "ASC" && sortForColumnName == "id" && (
+                    <ArrowDropUpOutlinedIcon />
+                  )}
+                  {sort == "DESC" && sortForColumnName == "id" && (
+                    <ArrowDropDownOutlinedIcon />
+                  )}
+                </Box>
+              </TableCell>
+              {optionData.includes("all") ||
+              optionData.includes("temperature") ? (
                 <TableCell
                   onClick={() => handleChangeSortData("temperature")}
                   align="center"
@@ -197,10 +194,10 @@ const DataSensor = () => {
                     }}
                   >
                     <Typography>Temperature</Typography>{" "}
-                    {sortOrder == "up" && sortFor == "temperature" && (
+                    {sort == "ASC" && sortForColumnName == "temperature" && (
                       <ArrowDropUpOutlinedIcon />
                     )}
-                    {sortOrder == "dow" && sortFor == "temperature" && (
+                    {sort == "DESC" && sortForColumnName == "temperature" && (
                       <ArrowDropDownOutlinedIcon />
                     )}
                   </Box>
@@ -208,7 +205,7 @@ const DataSensor = () => {
               ) : (
                 ""
               )}
-              {optionData === "All" || optionData === "Humb" ? (
+              {optionData.includes("all") || optionData.includes("humb") ? (
                 <TableCell
                   onClick={() => handleChangeSortData("humb")}
                   align="center"
@@ -221,10 +218,10 @@ const DataSensor = () => {
                     }}
                   >
                     <Typography>Humb</Typography>{" "}
-                    {sortOrder == "up" && sortFor == "humb" && (
+                    {sort == "ASC" && sortForColumnName == "humb" && (
                       <ArrowDropUpOutlinedIcon />
                     )}
-                    {sortOrder == "dow" && sortFor == "humb" && (
+                    {sort == "DESC" && sortForColumnName == "humb" && (
                       <ArrowDropDownOutlinedIcon />
                     )}
                   </Box>
@@ -232,7 +229,7 @@ const DataSensor = () => {
               ) : (
                 ""
               )}
-              {optionData === "All" || optionData === "Light" ? (
+              {optionData.includes("all") || optionData.includes("light") ? (
                 <TableCell
                   onClick={() => handleChangeSortData("light")}
                   align="center"
@@ -245,10 +242,10 @@ const DataSensor = () => {
                     }}
                   >
                     <Typography>Light</Typography>{" "}
-                    {sortOrder == "up" && sortFor == "light" && (
+                    {sort == "ASC" && sortForColumnName == "light" && (
                       <ArrowDropUpOutlinedIcon />
                     )}
-                    {sortOrder == "dow" && sortFor == "light" && (
+                    {sort == "DESC" && sortForColumnName == "light" && (
                       <ArrowDropDownOutlinedIcon />
                     )}
                   </Box>
@@ -257,7 +254,7 @@ const DataSensor = () => {
                 ""
               )}
               <TableCell
-                onClick={() => handleChangeSortData("creat_at")}
+                onClick={() => handleChangeSortData("create_at")}
                 align="center"
               >
                 <Box
@@ -268,10 +265,10 @@ const DataSensor = () => {
                   }}
                 >
                   <Typography>Creat at</Typography>{" "}
-                  {sortOrder == "up" && sortFor == "creat_at" && (
+                  {sort == "ASC" && sortForColumnName == "create_at" && (
                     <ArrowDropUpOutlinedIcon />
                   )}
-                  {sortOrder == "dow" && sortFor == "creat_at" && (
+                  {sort == "DESC" && sortForColumnName == "create_at" && (
                     <ArrowDropDownOutlinedIcon />
                   )}
                 </Box>
@@ -279,8 +276,8 @@ const DataSensor = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {visibleRows &&
-              visibleRows.map((row) => (
+            {rows &&
+              rows.map((row) => (
                 <TableRow
                   key={row.id}
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
@@ -293,7 +290,8 @@ const DataSensor = () => {
                   >
                     {row.id}
                   </TableCell>
-                  {optionData === "All" || optionData === "Temperature" ? (
+                  {optionData.includes("all") ||
+                  optionData.includes("temperature") ? (
                     <TableCell
                       sx={{
                         background: getTemperatureColor(row.temperature),
@@ -306,7 +304,7 @@ const DataSensor = () => {
                   ) : (
                     ""
                   )}
-                  {optionData === "All" || optionData === "Humb" ? (
+                  {optionData.includes("all") || optionData.includes("humb") ? (
                     <TableCell
                       sx={{
                         background: getHumidityColor(row.humb),
@@ -319,7 +317,8 @@ const DataSensor = () => {
                   ) : (
                     ""
                   )}
-                  {optionData === "All" || optionData === "Light" ? (
+                  {optionData.includes("all") ||
+                  optionData.includes("light") ? (
                     <TableCell
                       sx={{
                         width: "200px",
@@ -344,9 +343,9 @@ const DataSensor = () => {
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={rows && rows.length}
+        count={totalElement && totalElement}
         rowsPerPage={rowsPerPage}
-        page={page}
+        page={page - 1}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
