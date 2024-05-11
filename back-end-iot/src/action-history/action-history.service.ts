@@ -3,7 +3,7 @@ import { CreateActionHistoryDto } from './dto/create-action-history.dto';
 import { UpdateActionHistoryDto } from './dto/update-action-history.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ActionHistory } from './entities/action-history.entity';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { GetActionHistoryDto } from './dto/get-action-history.dto';
 
 import { SearchActionHistoryDto } from './dto/search-action-history.dto';
@@ -39,11 +39,16 @@ export class ActionHistoryService {
     const order = {
       [sortForColumnName]: sort,
     };
-    return this.actionHistory.find({
+    const totalItems = await this.actionHistory.count();
+    const data = await this.actionHistory.find({
       order,
       take: +rowsPerPage,
       skip: offset,
     });
+    return {
+      totalItems,
+      data,
+    };
   }
 
   async seachActionHistory(searchActionHistoryDto: SearchActionHistoryDto) {
@@ -51,25 +56,46 @@ export class ActionHistoryService {
       sort = 'ASC',
       rowsPerPage = 5,
       page = 1,
-      sortForColumnName = 'id',
+      searchForColumnName = 'id',
       value,
+      startDate,
+      endDate,
     } = searchActionHistoryDto;
-    if (value == null || value == '') {
+    if (
+      (value == null && startDate == null) ||
+      (value == '' && startDate == null)
+    ) {
       return 'Value is not empty';
     }
-    const searchCondition = {
-      [sortForColumnName]: value,
+    let searchCondition;
+    searchCondition = {
+      [searchForColumnName === 'all' ? 'id' : searchForColumnName]: value,
     };
+    // handle for search start date and end date
+
+    if (startDate && endDate) {
+      searchCondition = {
+        ...searchCondition,
+        [searchForColumnName]: Between(startDate, endDate),
+      };
+    }
     const offset = (((+page as number) - 1) * +rowsPerPage) as number;
     const order = {
-      [sortForColumnName]: sort,
+      [searchForColumnName === 'all' ? 'id' : searchForColumnName]: sort,
     };
-    return this.actionHistory.find({
+    const totalItems = await this.actionHistory.count({
+      where: searchCondition,
+    });
+    const data = await this.actionHistory.find({
       order,
       take: +rowsPerPage,
       skip: +offset,
       where: searchCondition,
     });
+    return {
+      totalItems,
+      data,
+    };
   }
 
   async update(id: number, updateActionHistoryDto: UpdateActionHistoryDto) {

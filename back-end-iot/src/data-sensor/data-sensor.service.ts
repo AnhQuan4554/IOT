@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DataSensor } from './entities/data-sensor.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { DataSensorDto } from './dtos/data-sensor.dto';
 import {
   ConnectedSocket,
@@ -32,11 +32,16 @@ export class DataSensorService {
     const order = {
       [sortForColumnName]: sort,
     };
-    return this.dataSensor.find({
+    const totalItems = await this.dataSensor.count();
+    const data = await this.dataSensor.find({
       order,
       take: +rowsPerPage,
       skip: offset,
     });
+    return {
+      totalItems,
+      data,
+    };
   }
 
   async seachDataSensor(searchDataSensorDto: SearchDataSensorDto) {
@@ -44,25 +49,47 @@ export class DataSensorService {
       sort = 'ASC',
       rowsPerPage = 5,
       page = 1,
-      sortForColumnName = 'id',
+      searchForColumnName = 'id',
       value,
+      startDate,
+      endDate,
     } = searchDataSensorDto;
-    if (value == null || value == '') {
+
+    if (
+      (value == null && startDate == null) ||
+      (value == '' && startDate == null)
+    ) {
       return 'Value is not empty';
     }
-    const searchCondition = {
-      [sortForColumnName]: value,
+    let searchCondition;
+    searchCondition = {
+      [searchForColumnName === 'all' ? 'id' : searchForColumnName]: value,
     };
+    // handle for search start date and end date
+
+    if (startDate && endDate) {
+      searchCondition = {
+        ...searchCondition,
+        [searchForColumnName]: Between(startDate, endDate),
+      };
+    }
     const offset = (((+page as number) - 1) * +rowsPerPage) as number;
     const order = {
-      [sortForColumnName]: sort,
+      [searchForColumnName === 'all' ? 'id' : searchForColumnName]: sort,
     };
-    return this.dataSensor.find({
+    const totalItems = await this.dataSensor.count({
+      where: searchCondition,
+    });
+    const data = await this.dataSensor.find({
       order,
       take: +rowsPerPage,
       skip: +offset,
       where: searchCondition,
     });
+    return {
+      totalItems,
+      data,
+    };
   }
   async create(newData: DataSensorDto) {
     const newDataSensor = await this.dataSensor.create(newData);
@@ -94,16 +121,18 @@ export class DataSensorService {
       return false;
     }
   }
+
   // start handle websocket for action tranform massage with client
 
   @SubscribeMessage('events')
   handleEvent(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
     console.log('websocket message++', data);
 
-    this.server.emit('event2', {
+    this.server.emit('event3', {
       msg: 'new message22',
       content: data,
     });
-    client.emit('events', { name: 'Nest' });
+    console.log('clien++', client.id);
+    client.emit('event2', 'client emit');
   }
 }

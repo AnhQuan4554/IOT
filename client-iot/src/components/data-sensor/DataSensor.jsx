@@ -22,17 +22,22 @@ import ArrowDropDownOutlinedIcon from "@mui/icons-material/ArrowDropDownOutlined
 import ArrowDropUpOutlinedIcon from "@mui/icons-material/ArrowDropUpOutlined";
 import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { DatePicker } from "@mui/x-date-pickers";
 
 const DataSensor = () => {
   const [rows, setRows] = useState();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchValue, setSearchValue] = useState("");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [page, setPage] = React.useState(1);
   const [sort, setSort] = useState("ASC");
   const [sortForColumnName, setSortForColumnName] = useState("id");
   const [isLoading, setIsLoading] = useState(true);
   const [optionData, setOptionData] = useState("all");
-  const [totalElement, setTotalElement] = useState(null);
+  const [totalElement, setTotalElement] = useState();
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const fetchData = async () => {
     setIsLoading(true);
     const { data } = await axios.get(
@@ -41,6 +46,20 @@ const DataSensor = () => {
     if (data) {
       setIsLoading(false);
     }
+    await setRows(data.data);
+    await setTotalElement(data.totalItems);
+  };
+  const searchData = async () => {
+    setIsLoading(true);
+    const { data } = await axios.get(
+      `http://localhost:3001/data-sensor/search?rowsPerPage=${rowsPerPage}&page=${page}&sort=${sort}&searchForColumnName=${
+        Array.isArray(optionData) ? optionData[0] : optionData
+      }&value=${searchValue}&startDate=${startDate}&endDate=${endDate}`
+    );
+    if (data) {
+      setIsLoading(false);
+    }
+
     await setRows(data.data);
     await setTotalElement(data.totalItems);
   };
@@ -74,25 +93,26 @@ const DataSensor = () => {
     return `hsl(${hue}, 100%, 50%)`;
   };
   const handleSearch = async () => {
-    setIsLoading(true);
-    const { data } = await axios.get(
-      `http://localhost:3001/data-sensor/search?rowsPerPage=${rowsPerPage}&page=${page}&sort=${sort}&searchForColumnName=${
-        optionData !== "all" ? optionData : "id"
-      }&value=${searchTerm}`
-    );
-    if (data) {
-      setIsLoading(false);
+    if (startDate !== "" && endDate === "") {
+      alert("End Date not empty");
+      return;
     }
-    await setRows(data);
+    if (startDate === "" && endDate !== "") {
+      alert("End Date not empty");
+      return;
+    }
+    searchValue || startDate ? searchData() : fetchData();
   };
 
   //get all data
   useEffect(() => {
-    fetchData();
+    searchValue || startDate ? searchData() : fetchData();
   }, [sort, sortForColumnName, page, rowsPerPage]);
   const handleChangeOptionData = (event) => {
     const { value } = event.target;
     setOptionData(value);
+    setStartDate("");
+    setEndDate("");
   };
   function formatDate(inputDateString) {
     const originalDate = new Date(inputDateString);
@@ -105,6 +125,7 @@ const DataSensor = () => {
 
     return formattedDate;
   }
+
   // change sort
   const handleChangeSortData = (sortflow) => {
     setSortForColumnName(sortflow);
@@ -114,24 +135,56 @@ const DataSensor = () => {
       setSort("ASC");
     }
   };
-  const idOptions = ["id", "temperature", "humb", "light", "creat_at"];
-  const createOptions = ["creat_at", "temperature", "humb", "light", "id"];
+  const idOptions = ["id", "temperature", "humb", "light", "create_at"];
+  const createOptions = ["create_at", "temperature", "humb", "light", "id"];
 
   return (
     <Box sx={{ position: "relative" }}>
       <Grid container marginLeft={"30px"}>
-        <Grid item xs={4}>
-          <TextField
-            label="Search"
-            variant="outlined"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Button onClick={handleSearch}>Search</Button>
-        </Grid>
+        {optionData[0] === createOptions[0] ? (
+          <Grid item xs={4}>
+            <Grid container justifyContent={"space-around"}>
+              <Grid item xs={5.5}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Start date"
+                    onChange={(newDate) =>
+                      setStartDate(newDate ? formatDate(newDate) : "")
+                    }
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid item xs={5.5}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="End date"
+                    onChange={(newDate) =>
+                      setEndDate(newDate ? formatDate(newDate) : "")
+                    }
+                  />
+                </LocalizationProvider>
+              </Grid>
+            </Grid>
+
+            <Button onClick={handleSearch}>Search</Button>
+          </Grid>
+        ) : (
+          <Grid item xs={4}>
+            <TextField
+              label="Search"
+              variant="outlined"
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value);
+              }}
+            />
+            <Button onClick={handleSearch}>Search</Button>
+          </Grid>
+        )}
+
         <Grid item xs={4}>
           <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">Search </InputLabel>
+            <InputLabel id="demo-simple-select-label">Search</InputLabel>
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"

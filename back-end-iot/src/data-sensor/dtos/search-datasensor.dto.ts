@@ -28,10 +28,20 @@ export class SearchDataSensorDto {
     enum: ['id', 'temperature', 'humb', 'light', 'create_at'],
     description: 'column name for sort',
   })
-  sortForColumnName?: string;
+  searchForColumnName?: string;
   @ApiProperty({
     required: true,
     description: 'value for sort',
   })
   value?: string;
+  @ApiProperty({
+    required: false,
+    description: 'start date for sort',
+  })
+  startDate?: string;
+  @ApiProperty({
+    required: false,
+    description: 'end date for sort',
+  })
+  endDate?: string;
 }
