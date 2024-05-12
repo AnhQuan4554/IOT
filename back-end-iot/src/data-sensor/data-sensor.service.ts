@@ -4,15 +4,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { DataSensorDto } from './dtos/data-sensor.dto';
 import {
-  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { GetDataSensorDto } from './dtos/get-datasensor.dto';
 import { SearchDataSensorDto } from './dtos/search-datasensor.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 @Injectable()
 @WebSocketGateway()
 export class DataSensorService {
@@ -21,6 +21,7 @@ export class DataSensorService {
     @InjectRepository(DataSensor)
     private dataSensor: Repository<DataSensor>,
   ) {}
+
   async getAllDataSensor(getDataSensorDto: GetDataSensorDto) {
     const {
       sort = 'ASC',
@@ -93,8 +94,13 @@ export class DataSensorService {
   }
   async create(newData: DataSensorDto) {
     const newDataSensor = await this.dataSensor.create(newData);
-    const savedData = await this.dataSensor.save(newDataSensor);
-    return savedData;
+
+    try {
+      const savedData = await this.dataSensor.save(newDataSensor);
+      return savedData;
+    } catch (error) {
+      console.log('error when create data sensor ', error);
+    }
   }
 
   async update(id: number, newData: DataSensorDto) {
@@ -124,15 +130,43 @@ export class DataSensorService {
 
   // start handle websocket for action tranform massage with client
 
-  @SubscribeMessage('events')
-  handleEvent(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-    console.log('websocket message++', data);
-
-    this.server.emit('event3', {
-      msg: 'new message22',
+  @SubscribeMessage('temperature')
+  handleEventTemperature(@MessageBody() data: any) {
+    this.server.emit('feTemperature', {
+      msg: 'feTemperature',
       content: data,
     });
-    console.log('clien++', client.id);
-    client.emit('event2', 'client emit');
+  }
+  @SubscribeMessage('humility')
+  handleEventHumility(@MessageBody() data: any) {
+    this.server.emit('feHumility', {
+      msg: 'feHumility',
+      content: data,
+    });
+  }
+  // @SubscribeMessage('light')
+  // handleEventLight(@MessageBody() data: any) {
+  //   this.server.emit('feLight', {
+  //     msg: 'feLight',
+  //     content: data,
+  //   });
+  // }
+
+  private getRandomValue(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  handleEventLight() {
+    const temperatureData = this.getRandomValue(10, 30); // Độ C
+    const humidityData = this.getRandomValue(40, 60); // Phần trăm
+    const lightData = this.getRandomValue(100, 1000);
+    this.server.emit('feLight', {
+      msg: 'Data recive in ESP8266',
+      data: {
+        temperatureData,
+        humidityData,
+        lightData,
+      },
+    });
   }
 }

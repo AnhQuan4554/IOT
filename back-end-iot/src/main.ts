@@ -29,6 +29,7 @@ async function bootstrap() {
   );
 
   // Start both the HTTP and MQTT servers
+
   await app.listen(3001);
   await mqttApp.listen();
 }

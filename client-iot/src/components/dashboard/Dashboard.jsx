@@ -20,17 +20,21 @@ import {
   DeviceGrid,
   WrapDeviceGrid,
 } from "./DasboardStyled";
+import { socket } from "./DataSensorSocket";
+import ChartDashboard from "./ChartDashboard";
+
 const Dashboard = () => {
   const [isActive, setIsActive] = useState(false);
   const [isGlow, setIsGlow] = useState(false);
   const [isWarning, setIsWarning] = useState(false);
   const [humidity, setHumidity] = useState();
   const [temperature, setTemperature] = useState();
-  const [brightness, setBrightness] = useState(10);
+  const [light, setLight] = useState(10);
+  const [xData, setXData] = useState([1, 2, 3, 5, 8]);
   const [chartData, setChartData] = useState({
-    temperatureData: [10, 20, 30, 15, 23],
-    humidityData: [30, 20, 10, 25, 40],
-    pressureData: [12, 30, 20, 56, 20],
+    temperatureChartData: [10, 20, 30, 15, 23],
+    humidityChartData: [30, 20, 10, 25, 40],
+    lightChartData: [12, 30, 20, 56, 20],
   });
   setInterval(() => {}, 1000);
   const handleFan = () => {
@@ -76,8 +80,54 @@ const Dashboard = () => {
       setIsWarning(true);
     }
   }, [temperature]);
-  console.log("is temperature", temperature);
-  console.log("is humidity", humidity);
+  /// handle socket
+  useEffect(() => {
+    const newChartData = { ...chartData };
+    let newXData = [...xData];
+    const changeDataFromSocket = async (
+      temperatureData,
+      humidityData,
+      lightData
+    ) => {
+      await setTemperature(temperatureData);
+      await setHumidity(humidityData);
+      await setLight(lightData);
+      ///
+
+      // delete fist old data
+      newChartData.temperatureChartData = [
+        ...newChartData.temperatureChartData.slice(1),
+        temperatureData,
+      ];
+      newChartData.humidityChartData = [
+        ...newChartData.humidityChartData.slice(1),
+        humidityData,
+      ];
+      newChartData.lightChartData = [
+        ...newChartData.lightChartData.slice(1),
+        lightData,
+      ];
+      setChartData(newChartData);
+      // set x Data
+
+      newXData = [...newXData.slice(1), newXData[newXData.length - 1] + 1];
+      setXData(newXData);
+    };
+    // no-op if the socket is already connected
+
+    socket.connect();
+    socket.on("feLight", (value) => {
+      const { temperatureData, humidityData, lightData } = value.data;
+
+      value.data &&
+        changeDataFromSocket(temperatureData, humidityData, lightData);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   return (
     <WrapDashboard className="wrapDashboard">
       <Grid container>
@@ -112,7 +162,9 @@ const Dashboard = () => {
               <ImageIcon src={humidityIcon} />
             </WeatherInforGridItem>
             <WeatherInforGridItem xs={12}>
-              {humidity && humidity} %
+              <Typography variant="h4" fontWeight={600}>
+                {humidity && humidity} %
+              </Typography>
             </WeatherInforGridItem>
           </WeatherInforGrid>
           <WeatherInforGrid xs={3.5} item>
@@ -123,37 +175,15 @@ const Dashboard = () => {
               <ImageIcon src={lightIcon} />
             </WeatherInforGridItem>
             <WeatherInforGridItem xs={12}>
-              {brightness && brightness}
+              <Typography variant="h4" fontWeight={600}>
+                {light && light}
+              </Typography>
             </WeatherInforGridItem>
           </WeatherInforGrid>
         </WrapWeatherInforGrid>
         <Grid xs={12} item display={"flex"}>
           <Grid sx={{ border: "1px solid black" }} xs={8} item>
-            <LineChart
-              xAxis={[{ data: [1, 2, 3, 5, 8] }]}
-              yAxis={[
-                { id: "linearAxis", scaleType: "linear" },
-                { id: "logAxis", scaleType: "log" },
-              ]}
-              series={[
-                {
-                  data: chartData.temperatureData,
-                  label: "Temperature",
-                },
-                {
-                  data: chartData.humidityData,
-                  label: "Humidity",
-                },
-                {
-                  data: chartData.pressureData,
-                  label: "Pressure",
-                },
-              ]}
-              height={300}
-              sx={{ width: "100%" }}
-              leftAxis="linearAxis"
-              rightAxis="linearAxis"
-            />
+            <ChartDashboard chartData={chartData} xData={xData} />
           </Grid>
           <WrapDeviceGrid sx={{ border: "1px solid black" }} xs={4} item>
             <DeviceGrid xs={12} item>
