@@ -113,6 +113,7 @@ const DataSensor = () => {
     setOptionData(value);
     setStartDate("");
     setEndDate("");
+    setSearchValue("");
   };
   function formatDate(inputDateString) {
     const originalDate = new Date(inputDateString);

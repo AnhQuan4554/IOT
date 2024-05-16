@@ -116,7 +116,7 @@ const Dashboard = () => {
     // no-op if the socket is already connected
 
     socket.connect();
-    socket.on("feLight", (value) => {
+    socket.on("socketData", (value) => {
       const { temperatureData, humidityData, lightData } = value.data;
 
       value.data &&

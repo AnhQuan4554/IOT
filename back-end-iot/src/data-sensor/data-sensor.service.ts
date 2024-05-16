@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DataSensor } from './entities/data-sensor.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, Like, Raw, Repository } from 'typeorm';
 import { DataSensorDto } from './dtos/data-sensor.dto';
 import {
   MessageBody,
@@ -13,6 +13,7 @@ import { Server } from 'socket.io';
 import { GetDataSensorDto } from './dtos/get-datasensor.dto';
 import { SearchDataSensorDto } from './dtos/search-datasensor.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
 @Injectable()
 @WebSocketGateway()
 export class DataSensorService {
@@ -63,16 +64,32 @@ export class DataSensorService {
       return 'Value is not empty';
     }
     let searchCondition;
-    searchCondition = {
-      [searchForColumnName === 'all' ? 'id' : searchForColumnName]: value,
-    };
-    // handle for search start date and end date
 
     if (startDate && endDate) {
+      console.log('sss', startDate, endDate);
       searchCondition = {
         ...searchCondition,
         [searchForColumnName]: Between(startDate, endDate),
       };
+    }
+    if (searchForColumnName === 'all') {
+      searchCondition = [
+        { id: Like(`%${value}%`) },
+        { temperature: Like(`%${value}%`) },
+        { humb: Like(`%${value}%`) },
+        { light: Like(`%${value}%`) },
+        {
+          create_at: Raw(
+            (alias) => `DATE_FORMAT(${alias}, '%d-%m-%Y') LIKE '%${value}%'`,
+          ),
+        },
+      ];
+    } else {
+      if (searchForColumnName !== 'create_at') {
+        searchCondition = {
+          [searchForColumnName]: value,
+        };
+      }
     }
     const offset = (((+page as number) - 1) * +rowsPerPage) as number;
     const order = {
@@ -97,6 +114,7 @@ export class DataSensorService {
 
     try {
       const savedData = await this.dataSensor.save(newDataSensor);
+      console.log('create success data sensor' + savedData.temperature);
       return savedData;
     } catch (error) {
       console.log('error when create data sensor ', error);
@@ -155,12 +173,22 @@ export class DataSensorService {
   private getRandomValue(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  handleEventLight() {
+  @Cron(CronExpression.EVERY_10_HOURS)
+  async handleSendData() {
     const temperatureData = this.getRandomValue(10, 30); // Độ C
     const humidityData = this.getRandomValue(40, 60); // Phần trăm
     const lightData = this.getRandomValue(100, 1000);
-    this.server.emit('feLight', {
+    const newDataSensor = new DataSensorDto();
+    newDataSensor.temperature = temperatureData;
+    newDataSensor.humb = humidityData;
+    newDataSensor.light = lightData;
+    newDataSensor.create_at = new Date();
+    try {
+      await this.create(newDataSensor);
+    } catch (error) {
+      console.log('Error when create' + newDataSensor);
+    }
+    await this.server.emit('socketData', {
       msg: 'Data recive in ESP8266',
       data: {
         temperatureData,

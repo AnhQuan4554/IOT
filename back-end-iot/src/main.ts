@@ -6,6 +6,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
+  const { PORT_MQTT, USERNAME_MQTT, PASSWORD_MQTT } = process.env;
+  console.log('USERNAME_MQTT', USERNAME_MQTT);
+  console.log('PASSWORD_MQTT', PASSWORD_MQTT);
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
@@ -23,7 +26,9 @@ async function bootstrap() {
     {
       transport: Transport.MQTT,
       options: {
-        url: process.env.BROKER_URL,
+        url: `mqtt://localhost:${PORT_MQTT}`,
+        username: USERNAME_MQTT,
+        password: PASSWORD_MQTT,
       },
     },
   );
