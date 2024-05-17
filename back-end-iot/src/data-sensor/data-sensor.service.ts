@@ -1,18 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DataSensor } from './entities/data-sensor.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, Like, Raw, Repository } from 'typeorm';
 import { DataSensorDto } from './dtos/data-sensor.dto';
 import {
-  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { GetDataSensorDto } from './dtos/get-datasensor.dto';
 import { SearchDataSensorDto } from './dtos/search-datasensor.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
+
 @Injectable()
 @WebSocketGateway()
 export class DataSensorService {
@@ -21,6 +22,7 @@ export class DataSensorService {
     @InjectRepository(DataSensor)
     private dataSensor: Repository<DataSensor>,
   ) {}
+
   async getAllDataSensor(getDataSensorDto: GetDataSensorDto) {
     const {
       sort = 'ASC',
@@ -62,16 +64,32 @@ export class DataSensorService {
       return 'Value is not empty';
     }
     let searchCondition;
-    searchCondition = {
-      [searchForColumnName === 'all' ? 'id' : searchForColumnName]: value,
-    };
-    // handle for search start date and end date
 
     if (startDate && endDate) {
+      console.log('sss', startDate, endDate);
       searchCondition = {
         ...searchCondition,
         [searchForColumnName]: Between(startDate, endDate),
       };
+    }
+    if (searchForColumnName === 'all') {
+      searchCondition = [
+        { id: Like(`%${value}%`) },
+        { temperature: Like(`%${value}%`) },
+        { humb: Like(`%${value}%`) },
+        { light: Like(`%${value}%`) },
+        {
+          create_at: Raw(
+            (alias) => `DATE_FORMAT(${alias}, '%d-%m-%Y') LIKE '%${value}%'`,
+          ),
+        },
+      ];
+    } else {
+      if (searchForColumnName !== 'create_at') {
+        searchCondition = {
+          [searchForColumnName]: value,
+        };
+      }
     }
     const offset = (((+page as number) - 1) * +rowsPerPage) as number;
     const order = {
@@ -93,8 +111,14 @@ export class DataSensorService {
   }
   async create(newData: DataSensorDto) {
     const newDataSensor = await this.dataSensor.create(newData);
-    const savedData = await this.dataSensor.save(newDataSensor);
-    return savedData;
+
+    try {
+      const savedData = await this.dataSensor.save(newDataSensor);
+      console.log('create success data sensor' + savedData.temperature);
+      return savedData;
+    } catch (error) {
+      console.log('error when create data sensor ', error);
+    }
   }
 
   async update(id: number, newData: DataSensorDto) {
@@ -124,15 +148,53 @@ export class DataSensorService {
 
   // start handle websocket for action tranform massage with client
 
-  @SubscribeMessage('events')
-  handleEvent(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-    console.log('websocket message++', data);
-
-    this.server.emit('event3', {
-      msg: 'new message22',
+  @SubscribeMessage('temperature')
+  handleEventTemperature(@MessageBody() data: any) {
+    this.server.emit('feTemperature', {
+      msg: 'feTemperature',
       content: data,
     });
-    console.log('clien++', client.id);
-    client.emit('event2', 'client emit');
+  }
+  @SubscribeMessage('humility')
+  handleEventHumility(@MessageBody() data: any) {
+    this.server.emit('feHumility', {
+      msg: 'feHumility',
+      content: data,
+    });
+  }
+  // @SubscribeMessage('light')
+  // handleEventLight(@MessageBody() data: any) {
+  //   this.server.emit('feLight', {
+  //     msg: 'feLight',
+  //     content: data,
+  //   });
+  // }
+
+  private getRandomValue(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  @Cron(CronExpression.EVERY_10_HOURS)
+  async handleSendData() {
+    const temperatureData = this.getRandomValue(10, 30); // Độ C
+    const humidityData = this.getRandomValue(40, 60); // Phần trăm
+    const lightData = this.getRandomValue(100, 1000);
+    const newDataSensor = new DataSensorDto();
+    newDataSensor.temperature = temperatureData;
+    newDataSensor.humb = humidityData;
+    newDataSensor.light = lightData;
+    newDataSensor.create_at = new Date();
+    try {
+      await this.create(newDataSensor);
+    } catch (error) {
+      console.log('Error when create' + newDataSensor);
+    }
+    await this.server.emit('socketData', {
+      msg: 'Data recive in ESP8266',
+      data: {
+        temperatureData,
+        humidityData,
+        lightData,
+      },
+    });
   }
 }

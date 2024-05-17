@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
@@ -23,11 +24,21 @@ import {
 import { DataSensor } from './entities/data-sensor.entity';
 import { GetDataSensorDto } from './dtos/get-datasensor.dto';
 import { SearchDataSensorDto } from './dtos/search-datasensor.dto';
+import {
+  ClientProxy,
+  Ctx,
+  MessagePattern,
+  MqttContext,
+  Payload,
+} from '@nestjs/microservices';
 
 @Controller('data-sensor')
 @ApiTags('Data Sensor')
 export class DataSensorController {
-  constructor(private readonly dataSenSorService: DataSensorService) {}
+  constructor(
+    private readonly dataSenSorService: DataSensorService,
+    @Inject('MQTT_SERVICE') private client: ClientProxy,
+  ) {}
   // Get ALL
   @Get()
   async getAllDataSensor(@Query() getDataSensorDto: GetDataSensorDto) {
@@ -48,6 +59,13 @@ export class DataSensorController {
   })
   async creatData(@Body() dataSensorDto: DataSensorDto) {
     return await this.dataSenSorService.create(dataSensorDto);
+  }
+
+  @Post('/send-message')
+  async sendMessage() {
+    console.log('send mesage');
+    await this.client.connect();
+    this.client.emit('port1888', 'message21312');
   }
 
   @Patch(':id')
@@ -75,5 +93,12 @@ export class DataSensorController {
   })
   remove(@Param('id') id: string) {
     return this.dataSenSorService.remove(+id);
+  }
+
+  /// get data from mqtt
+  @MessagePattern('port1888')
+  async getNotifications(@Payload() data: any, @Ctx() context: MqttContext) {
+    console.log(`Topic: ${context.getTopic()}`);
+    this.client.emit('port1888-receive', 'data new');
   }
 }
