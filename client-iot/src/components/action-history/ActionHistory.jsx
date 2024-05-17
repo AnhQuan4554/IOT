@@ -92,6 +92,8 @@ const ActionHistory = () => {
     setOptionData(value);
     setStartDate("");
     setEndDate("");
+    setSearchValue("");
+
   };
   // change sort
   const handleChangeSortData = (sortflow) => {

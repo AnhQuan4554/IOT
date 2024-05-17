@@ -3,7 +3,7 @@ import { CreateActionHistoryDto } from './dto/create-action-history.dto';
 import { UpdateActionHistoryDto } from './dto/update-action-history.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ActionHistory } from './entities/action-history.entity';
-import { Between, Repository } from 'typeorm';
+import { Between, Like, Raw, Repository } from 'typeorm';
 import { GetActionHistoryDto } from './dto/get-action-history.dto';
 
 import { SearchActionHistoryDto } from './dto/search-action-history.dto';
@@ -68,17 +68,32 @@ export class ActionHistoryService {
       return 'Value is not empty';
     }
     let searchCondition;
-    searchCondition = {
-      [searchForColumnName === 'all' ? 'id' : searchForColumnName]: value,
-    };
-    // handle for search start date and end date
-
     if (startDate && endDate) {
       searchCondition = {
         ...searchCondition,
         [searchForColumnName]: Between(startDate, endDate),
       };
     }
+    // update seach
+    if (searchForColumnName === 'all') {
+      searchCondition = [
+        { id: Like(`%${value}%`) },
+        { deviceName: Like(`%${value}%`) },
+        { action: Like(`%${value}%`) },
+        {
+          create_at: Raw(
+            (alias) => `DATE_FORMAT(${alias}, '%d-%m-%Y') LIKE '%${value}%'`,
+          ),
+        },
+      ];
+    } else {
+      if (searchForColumnName !== 'create_at') {
+        searchCondition = {
+          [searchForColumnName]: value,
+        };
+      }
+    }
+
     const offset = (((+page as number) - 1) * +rowsPerPage) as number;
     const order = {
       [searchForColumnName === 'all' ? 'id' : searchForColumnName]: sort,
